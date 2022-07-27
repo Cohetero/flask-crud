@@ -1,5 +1,5 @@
 # flask-crud
-crear un entorno virtual
-pip install -r requirements.txt
-correr el proyecto:
-python3 src/app.py 
+<p>crear un entorno virtua</p>
+<p>pip install -r requirements.txt</p>
+<p>correr el proyecto:</p>
+<p>python3 src/app.py</p>
