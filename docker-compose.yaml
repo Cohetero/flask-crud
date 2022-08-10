@@ -3,9 +3,7 @@ version: '3.7'
 services:
 
   app:
-    image: flask-crud:v2
-    volumes:
-      - ./src/uploads:/src/uploads
+    image: flask-crud:v6
     ports:
       - 4000:4000
     environment:

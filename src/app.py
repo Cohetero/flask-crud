@@ -41,7 +41,7 @@ def destroy(id):
 
     cursor.execute("SELECT foto FROM empleados WHERE idEmpleado = %s", id)
     fila = cursor.fetchall()
-    os.remove(os.path.join(app.config['CARPETA'], fila[0][0]))
+    #os.remove(os.path.join(app.config['CARPETA'], fila[0][0]))
 
     cursor.execute("DELETE FROM empleados WHERE idEmpleado=%s", (id))
     conn.commit()
@@ -68,18 +68,17 @@ def update():
     conn = mysql.connect()
     cursor = conn.cursor()
 
-    now = datetime.now()
-    tiempo = now.strftime("%Y%H%M%S")
-    if _foto.filename != '':
-        nuevoNombreFoto = tiempo + _foto.filename
-        _foto.save("uploads/" + nuevoNombreFoto)
-        cursor.execute("SELECT foto FROM empleados WHERE idEmpleado = %s", _id)
-        fila = cursor.fetchall()
+    #now = datetime.now()
+    #tiempo = now.strftime("%Y%H%M%S")
+    #if _foto.filename != '':
+    #    nuevoNombreFoto = tiempo + _foto.filename
+    #    _foto.save("uploads/" + nuevoNombreFoto)
+    #    cursor.execute("SELECT foto FROM empleados WHERE idEmpleado = %s", _id)
+    #    fila = cursor.fetchall()
 
-        os.remove(os.path.join(app.config['CARPETA'], fila[0][0]))
-        cursor.execute("UPDATE empleados SET foto=%s WHERE idEmpleado=%s", (nuevoNombreFoto, _id))
-        conn.commit()
-
+    #    os.remove(os.path.join(app.config['CARPETA'], fila[0][0]))
+    #    cursor.execute("UPDATE empleados SET foto=%s WHERE idEmpleado=%s", (nuevoNombreFoto, _id))
+    #    conn.commit()
     cursor.execute(sql, datos)
     conn.commit()
 
@@ -95,18 +94,19 @@ def storage():
     _correo = request.form['txtCorreo']
     _foto = request.files['txtFoto']
 
-    if _nombre == '' or _correo == '' or _foto == '':
+    #if _nombre == '' or _correo == '' or _foto == '':
+    if _nombre == '' or _correo == '':
         flash('Recuerda llenar los datos de los campos')
         return redirect(url_for('create'))
 
-    now = datetime.now()
-    tiempo = now.strftime("%Y%H%M%S")
-    if _foto.filename != '':
-        nuevoNombreFoto = tiempo + _foto.filename
-        _foto.save("uploads/" + nuevoNombreFoto)
+    #now = datetime.now()
+    #tiempo = now.strftime("%Y%H%M%S")
+    #if _foto.filename != '':
+    #    nuevoNombreFoto = tiempo + _foto.filename
+    #    _foto.save("uploads/" + nuevoNombreFoto)
 
-    sql = "INSERT INTO empleados (nombre, correo, foto) VALUES (%s, %s, %s)"
-    datos = (_nombre, _correo, nuevoNombreFoto)
+    sql = "INSERT INTO empleados (nombre, correo) VALUES (%s, %s)"
+    datos = (_nombre, _correo)
 
     conn = mysql.connect()
     cursor = conn.cursor()
