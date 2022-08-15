@@ -2,18 +2,35 @@ from flask import Flask
 from flask import render_template, request, redirect, url_for, flash
 from flaskext.mysql import MySQL
 from flask import send_from_directory
-from datetime import datetime
+
+from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy import Column, Integer, String, create_engine
 import os
 
 app = Flask(__name__)
+engine = create_engine('mysql+pymysql://root:secret@localhost/personas')
+Base = declarative_base()
 
+class User(Base):
+    __tablename__ = 'usuarios'
+
+    id = Column(Integer(), primary_key = True)
+    name = Column(String(50), nullable = False)
+    email = Column(String(50), nullable = False, unique = True)
+    foto = Column(String(500), nullable = True)
+
+    def __str__(self):
+        return f"User (name={self.name}, email={self.email})"
+
+Session = sessionmaker(engine)
+session = Session()
 # Conexión a la Base de Datos
-mysql = MySQL()
-app.config['MYSQL_DATABASE_HOST'] = 'mysql'
-app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'secret'
-app.config['MYSQL_DATABASE_DB'] = 'sistema'
-mysql.init_app(app)
+#mysql = MySQL()
+#app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+#app.config['MYSQL_DATABASE_USER'] = 'root'
+#app.config['MYSQL_DATABASE_PASSWORD'] = 'secret'
+#app.config['MYSQL_DATABASE_DB'] = 'sistema'
+#mysql.init_app(app)
 
 CARPETA = os.path.join('uploads')
 app.config['CARPETA'] = CARPETA
@@ -26,62 +43,42 @@ def uploads(nombreFoto):
 # Creacion de las rutas
 @app.route('/')
 def index():
-    sql = "SELECT * FROM empleados"
-    conn = mysql.connect()
-    cursor = conn.cursor()
-    cursor.execute(sql)
-    empleados = cursor.fetchall()
-    print(empleados)
-    return render_template('empleados/index.html', empleados = empleados)
+    users = session.query(User.id,
+                        User.name,
+                        User.email,
+                        User.foto).all()
+    return render_template('empleados/index.html', empleados = users)
 
 @app.route('/destroy/<int:id>')
 def destroy(id):
-    conn = mysql.connect()
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT foto FROM empleados WHERE idEmpleado = %s", id)
-    fila = cursor.fetchall()
-    #os.remove(os.path.join(app.config['CARPETA'], fila[0][0]))
-
-    cursor.execute("DELETE FROM empleados WHERE idEmpleado=%s", (id))
-    conn.commit()
+    session.query(User).filter(
+        User.id == id
+    ).delete()
+    session.commit()
     return redirect('/')
 
 @app.route('/edit/<int:id>')
 def edit(id):
-    conn = mysql.connect()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM empleados WHERE idEmpleado=%s", (id))
-    empleados = cursor.fetchall()
-    return render_template('empleados/edit.html', empleados = empleados)
+    user = session.query(User.id,
+                        User.name,
+                        User.email).filter(User.id == id).all()
+    return render_template('empleados/edit.html', empleados = user)
 
 @app.route('/update', methods=['POST'])
 def update():
     _nombre = request.form['txtNombre']
     _correo = request.form['txtCorreo']
-    _foto = request.files['txtFoto']
     _id = request.form['txtID']
 
-    sql = "UPDATE empleados SET nombre=%s, correo=%s WHERE idEmpleado=%s"
-    datos = (_nombre, _correo, _id)
-
-    conn = mysql.connect()
-    cursor = conn.cursor()
-
-    #now = datetime.now()
-    #tiempo = now.strftime("%Y%H%M%S")
-    #if _foto.filename != '':
-    #    nuevoNombreFoto = tiempo + _foto.filename
-    #    _foto.save("uploads/" + nuevoNombreFoto)
-    #    cursor.execute("SELECT foto FROM empleados WHERE idEmpleado = %s", _id)
-    #    fila = cursor.fetchall()
-
-    #    os.remove(os.path.join(app.config['CARPETA'], fila[0][0]))
-    #    cursor.execute("UPDATE empleados SET foto=%s WHERE idEmpleado=%s", (nuevoNombreFoto, _id))
-    #    conn.commit()
-    cursor.execute(sql, datos)
-    conn.commit()
-
+    session.query(User).filter(
+        User.id == _id
+    ).update(
+        {
+            User.name: _nombre,
+            User.email: _correo,
+        }
+    )
+    session.commit()
     return redirect('/')
 
 @app.route('/create')
@@ -94,27 +91,21 @@ def storage():
     _correo = request.form['txtCorreo']
     _foto = request.files['txtFoto']
 
-    #if _nombre == '' or _correo == '' or _foto == '':
     if _nombre == '' or _correo == '':
         flash('Recuerda llenar los datos de los campos')
         return redirect(url_for('create'))
 
-    #now = datetime.now()
-    #tiempo = now.strftime("%Y%H%M%S")
-    #if _foto.filename != '':
-    #    nuevoNombreFoto = tiempo + _foto.filename
-    #    _foto.save("uploads/" + nuevoNombreFoto)
-
-    sql = "INSERT INTO empleados (nombre, correo) VALUES (%s, %s)"
-    datos = (_nombre, _correo)
-
-    conn = mysql.connect()
-    cursor = conn.cursor()
-    cursor.execute(sql, datos)
-    conn.commit()
+    user = User(name = _nombre, email = _correo)
+    session.add(user)
+    session.commit()
     return redirect('/')
 
 if __name__ == '__main__':
+    Base.metadata.drop_all(engine)
+    Base.metadata.create_all(engine)
+    user = User(name='Mauricio', email='mauricio@gmail.com')
+    session.add(user)
+    session.commit()
     app.run(host = "0.0.0.0",
             port = 4000,
             debug = True)

@@ -3,14 +3,17 @@ version: '3.7'
 services:
 
   app:
-    image: flask-crud:v6
+    image: flask-crud:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - 4000:4000
     environment:
       MYSQL_HOST: localhost
       MYSQL_USER: root
       MYSQL_PASSWORD: secret
-      MYSQL_DB: sistema
+      MYSQL_DB: personas
       MYSQL_PORT: 3306
     networks:
       - todo-app
@@ -25,7 +28,7 @@ services:
       - 3306:3306
     environment:
       MYSQL_ROOT_PASSWORD: secret
-      MYSQL_DATABASE: sistema
+      MYSQL_DATABASE: personas
     networks:
       - todo-app
 
