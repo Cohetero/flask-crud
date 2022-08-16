@@ -3,6 +3,8 @@ from flask import render_template, request, redirect, url_for, flash
 from flaskext.mysql import MySQL
 from flask import send_from_directory
 
+from fastapi import FastAPI
+
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy import Column, Integer, String, create_engine
 import os
