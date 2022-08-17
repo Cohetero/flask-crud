@@ -1,8 +1,6 @@
 from sqlalchemy import Column, Integer, String
-from config.db import engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from settings.common import Base
 
-Base = declarative_base()
 class User(Base):
     __tablename__ = 'usuarios'
 
@@ -13,6 +11,3 @@ class User(Base):
 
     def __str__(self):
         return f"User (name={self.name}, email={self.email})"
-
-Session = sessionmaker(engine)
-session = Session()
